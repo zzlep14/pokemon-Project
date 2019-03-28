@@ -1,0 +1,86 @@
+---
+title: "PokemonData"
+author: "Zach Zlepper"
+date: "3/3/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+poke<-read.csv("pokemon.csv")
+#Number 1
+print(max(unique(poke[, "pokedex_number"])))
+#Generation List
+list.Generation<-table(poke$generation)
+print(list.Generation)
+#Legendary List
+list.Legendary<- table(poke$generation, poke$is_legendary)[,2]
+print(list.Legendary)
+
+#Number 2
+#weight graph is not normal
+hist(poke$weight_kg)
+#log-weights graph is normal
+hist(log(poke$weight_kg))
+#qqnorm is definitely not normal for weight
+qqnorm(poke$weight_kg)
+#qqnorm-log-weights is closer to normal distribution
+qqnorm(log(poke$weight_kg))
+
+#weight vs height plot
+library(car)
+scatterplot(log(poke$height_m) ~ log(poke$weight_kg) | poke$generation, data=poke)
+fit <- lm(poke$weight_kg ~ poke$height_m)
+summary(fit)
+fit.log <- lm(log(poke$weight_kg) ~ log(poke$height_m))
+summary(fit.log)
+
+#BMI
+BMI <- poke$weight_kg/(poke$height_m^2)
+poke$BMI = BMI
+#height sort
+height.sort <- data.frame("name" = poke$name, "height" = poke$height_m)
+head(height.sort[order(-height.sort$height),], 10)
+
+#weight sort
+weight.sort <- data.frame("name" = poke$name, "weight" = poke$weight_kg)
+head(weight.sort[order(-weight.sort$weight),], 10)
+
+#BMI sort
+BMI.sort <- data.frame("name" = poke$name, "BMI" = poke$BMI)
+head(BMI.sort[order(-BMI.sort$BMI),], 10)
+
+bug.type <- poke$height_m[which(poke$type1 == "bug")]
+dragon.type <- poke$height_m[which(poke$type1 == "dragon")]
+t.test(bug.type, dragon.type)
+
+electric.type <- poke$height_m[which(poke$type1 == "electric")]
+normal.type <- poke$height_m[which(poke$type1 == "normal")]
+t.test(electric.type, normal.type)
+
+
+#Extra-Credit
+similar <- function(pok.name){
+  selected <- poke[poke$name == pok.name,]
+  selected <- as.numeric(selected)
+  for(i in 1:ncol(poke)){
+    poke[is.na(poke[,i]), i] <- mean(poke[,i], na.rm = TRUE)
+  }
+  mini <- 10000000
+  name <- pok.name
+  for (x in poke$name) {
+    x.sel <- poke[poke$name == x,]
+    x.sel<- as.numeric(x.sel)
+    val <- sqrt(sum((x.sel-selected)^2))
+    if((val < mini) & (val != 0)){
+        mini <- val
+        name <- x
+      }
+    }
+  print(name)
+}
+ similar("Bulbasaur")
+ similar("Pidgeot")
+```
+
